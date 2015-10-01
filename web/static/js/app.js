@@ -25,16 +25,23 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 
 socket.connect()
 socket.onOpen( () => console.log("connected!") )
+console.log("hi")
 
 let App = {
-  init() { 
+  init() {
 
     let docId = $("#doc-form").data("id")
     let docChan = socket.channel("documents:" + docId)
     let editor = new Quill("#editor")
+    let docForm = $("#doc-form")
+    let saveTimer = null
 
     editor.on("text-change", (ops, source) => {
       if(source !== "user"){ return }
+      clearTimeout(saveTimer)
+      saveTimer = setTimeout(() => {
+        this.save(docChan, editor)
+      }, 2500)
       docChan.push("text_change", {ops: ops})
     })
 
@@ -42,9 +49,22 @@ let App = {
       editor.updateContents(ops)
     })
 
+    docForm.on("submit", e => {
+      e.preventDefault()
+      this.save(docChan, editor)
+    })
+
     docChan.join()
       .receive("ok", resp => console.log("joined!", resp) )
       .receive("error", reason => console.log("error!", reason) )
+  },
+
+  save(docChan, editor) {
+    let body = editor.getHTML()
+    let title = $("#document_title").val()
+    docChan.push("save", { body: body, title: title })
+      .receive("ok", () => console.log("saved!") )
+      .receive("error", ({reasons}) => console.log("error!", reasons) )
   }
 }
 
