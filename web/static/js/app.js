@@ -21,11 +21,15 @@ import "deps/phoenix_html/web/static/js/phoenix_html"
 // import socket from "./socket"
 import {Socket} from "deps/phoenix/web/static/js/phoenix"
 
-let socket = new Socket("/socket", {params: {token: window.userToken}})
+let socket = new Socket("/socket", {
+  logger: (kind, msg, data) => {
+    console.log(`${kind}: ${msg}`, data)
+  },
+  params: {token: window.userToken}
+})
 
 socket.connect()
 socket.onOpen( () => console.log("connected!") )
-console.log("hi")
 
 let App = {
   init() {
@@ -34,7 +38,20 @@ let App = {
     let docChan = socket.channel("documents:" + docId)
     let editor = new Quill("#editor")
     let docForm = $("#doc-form")
+    let msgContainer = $("#messages")
+    let msgInput = $("#message-input")
     let saveTimer = null
+
+    msgInput.on("keypress", e => {
+      if(e.which !== 13) { return }
+
+      docChan.push("new_message", {body: msgInput.val()})
+      msgInput.val("")
+    })
+
+    docChan.on("new_message", ({body}) => {
+      this.appendMessage(body, msgContainer)
+    })
 
     editor.on("text-change", (ops, source) => {
       if(source !== "user"){ return }
@@ -65,6 +82,11 @@ let App = {
     docChan.push("save", { body: body, title: title })
       .receive("ok", () => console.log("saved!") )
       .receive("error", ({reasons}) => console.log("error!", reasons) )
+  },
+
+  appendMessage(msg, msgContainer) {
+    msgContainer.append(`<br/>${msg}`)
+    msgContainer.scrollTop(msgContainer.prop("scrollHeight"))
   }
 }
 
