@@ -62,9 +62,9 @@ let App = {
       docChan.push("compute_img", { expr, start, end })
     })
 
-    docChan.on("insert_img", ({img, start, end}) => {
+    docChan.on("insert_img", ({url, start, end}) => {
       editor.deleteText(start, end)
-      editor.insertEmbed(start, 'image', img)
+      editor.insertEmbed(start, 'image', url)
     })
 
     docChan.on("new_message", (msg) => {
