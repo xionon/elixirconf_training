@@ -40,6 +40,7 @@ let App = {
     docChan.params["last_message_id"] = 0
 
     let editor = new Quill("#editor")
+    let editorContainer = $("#editor")
     let docForm = $("#doc-form")
     let saveTimer = null
 
@@ -51,6 +52,19 @@ let App = {
 
       docChan.push("new_message", {body: msgInput.val()})
       msgInput.val("")
+    })
+
+    editorContainer.on("keydown", e => {
+      if(!(e.which === 13 && e.metaKey)) { return }
+
+      let {start, end} = editor.getSelection()
+      let expr = editor.getText(start, end)
+      docChan.push("compute_img", { expr, start, end })
+    })
+
+    docChan.on("insert_img", ({img, start, end}) => {
+      editor.deleteText(start, end)
+      editor.insertEmbed(start, 'image', img)
     })
 
     docChan.on("new_message", (msg) => {

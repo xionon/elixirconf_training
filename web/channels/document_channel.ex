@@ -58,4 +58,14 @@ defmodule Docs.DocumentChannel do
     end
   end
 
+  def handle_in("compute_img", params, socket) do
+    img_url = "https://media0.giphy.com/media/14nMfF6eUeWayc/200_s.gif"
+    broadcast! socket, "insert_img", %{
+      start: params["start"],
+      end: params["end"],
+      img: img_url
+    }
+    {:reply, :ok, socket}
+  end
+
 end
