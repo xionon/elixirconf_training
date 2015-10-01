@@ -18,7 +18,7 @@ defmodule Docs.UserSocket do
   #
   #  To deny connection, return `:error`.
   def connect(_params, socket) do
-    {:ok, assign(socket, :user_id, :guest_id)}
+    {:ok, assign(socket, :user_id, :guest)}
   end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:

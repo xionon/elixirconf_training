@@ -26,10 +26,27 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 socket.connect()
 socket.onOpen( () => console.log("connected!") )
 
-let docId = "123"
-let docChan = socket.channel("documents:" + docId)
+let App = {
+  init() { 
 
-docChan.join()
-  .receive("ok", resp => console.log("joined!", resp) )
-  .receive("error", reason => console.log("error!", reason) )
+    let docId = $("#doc-form").data("id")
+    let docChan = socket.channel("documents:" + docId)
+    let editor = new Quill("#editor")
+
+    editor.on("text-change", (ops, source) => {
+      if(source !== "user"){ return }
+      docChan.push("text_change", {ops: ops})
+    })
+
+    docChan.on("text_change", ({ops}) => {
+      editor.updateContents(ops)
+    })
+
+    docChan.join()
+      .receive("ok", resp => console.log("joined!", resp) )
+      .receive("error", reason => console.log("error!", reason) )
+  }
+}
+
+App.init()
 
