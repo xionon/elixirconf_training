@@ -23,7 +23,7 @@ import {Socket} from "deps/phoenix/web/static/js/phoenix"
 
 let socket = new Socket("/socket", {
   logger: (kind, msg, data) => {
-    console.log(`${kind}: ${msg}`, data)
+    console.dir(`${kind}: ${msg}`, data)
   },
   params: {token: window.userToken}
 })
@@ -63,7 +63,6 @@ let App = {
     })
 
     docChan.on("insert_img", ({url, start, end}) => {
-      console.log(start, url)
       if(url === "") { return }
       editor.deleteText(start, end)
       editor.insertEmbed(start, 'image', url)

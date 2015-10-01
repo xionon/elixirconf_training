@@ -9,14 +9,12 @@ defmodule Docs.InfoSys do
   def compute_img(expr) do
     @backends
     |> Enum.map(fn backend ->
-      Supervisor.start_child(Docs.InfoSys.Supervisor, [
-        backend, [
+      Supervisor.start_child(Docs.InfoSys.Supervisor, [backend, [
           client_pid: self,
           expr: expr
-        ]
-      ])
+      ]])
     end)
-    |> Enum.filter(fn
+    |> Enum.map(fn
       {:ok, pid} -> {Process.monitor(pid), pid}
       _ -> nil
     end)
@@ -43,5 +41,4 @@ defmodule Docs.InfoSys do
 
     result
   end
-
 end

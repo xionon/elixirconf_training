@@ -7,7 +7,7 @@ defmodule Docs.InfoSys.Supervisor do
 
     def init(_) do
       children = [
-         worker(Docs.InfoSys, restart: :temporary)
+         worker(Docs.InfoSys, [], restart: :temporary)
       ]
 
       supervise children, strategy: :simple_one_for_one

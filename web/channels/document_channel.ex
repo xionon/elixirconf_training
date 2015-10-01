@@ -1,6 +1,7 @@
 defmodule Docs.DocumentChannel do
   use Docs.Web, :channel
   alias Docs.Document
+  import SweetXml
 
   def join("documents:" <> doc_id, params, socket) do
     send(self, {:after_join, params})
