@@ -36,11 +36,14 @@ let App = {
 
     let docId = $("#doc-form").data("id")
     let docChan = socket.channel("documents:" + docId)
+    docChan.params["last_message_id"] = 0
+
     let editor = new Quill("#editor")
     let docForm = $("#doc-form")
+    let saveTimer = null
+
     let msgContainer = $("#messages")
     let msgInput = $("#message-input")
-    let saveTimer = null
 
     msgInput.on("keypress", e => {
       if(e.which !== 13) { return }
@@ -49,8 +52,8 @@ let App = {
       msgInput.val("")
     })
 
-    docChan.on("new_message", ({body}) => {
-      this.appendMessage(body, msgContainer)
+    docChan.on("new_message", (msg) => {
+      this.appendMessage(msg, msgContainer, docChan)
     })
 
     editor.on("text-change", (ops, source) => {
@@ -71,8 +74,14 @@ let App = {
       this.save(docChan, editor)
     })
 
+    docChan.on("messages", ({messages}) => {
+      messages.reverse().forEach(msg => {
+        this.appendMessage(msg, msgContainer, docChan)
+      })
+    })
+
     docChan.join()
-      .receive("ok", resp => console.log("joined!", resp) )
+      .receive("ok", () => {} )
       .receive("error", reason => console.log("error!", reason) )
   },
 
@@ -84,8 +93,9 @@ let App = {
       .receive("error", ({reasons}) => console.log("error!", reasons) )
   },
 
-  appendMessage(msg, msgContainer) {
-    msgContainer.append(`<br/>${msg}`)
+  appendMessage(msg, msgContainer, docChan) {
+    docChan.params["last_message_id"] = Math.max(msg.id, docChan.params["last_message_id"])
+    msgContainer.append(`<br/>${msg.body}`)
     msgContainer.scrollTop(msgContainer.prop("scrollHeight"))
   }
 }
