@@ -1,14 +1,11 @@
 defmodule Docs.DocumentChannel do
   use Docs.Web, :channel
   alias Docs.Document
-  import SweetXml
 
   def join("documents:" <> doc_id, params, socket) do
     send(self, {:after_join, params})
     {:ok, assign(socket, :doc_id, doc_id)}
   end
-
-  defp app_id(), do: Application.get_env(:docs, :wolfram)[:app_id]
 
   def handle_info({:after_join, params}, socket) do
     doc = Repo.get(Document, socket.assigns.doc_id)
@@ -38,7 +35,7 @@ defmodule Docs.DocumentChannel do
     |> Document.changeset(params)
     |> Repo.update()
     |> case do
-      {:ok, _document} -> 
+      {:ok, _document} ->
         {:reply, :ok, socket}
       {:error, changeset} ->
         {:reply, {:error, %{reasons: changeset}}, socket}
@@ -62,17 +59,11 @@ defmodule Docs.DocumentChannel do
   end
 
   def handle_in("compute_img", params, socket) do
-    input = URI.encode(params["expr"])
-    {:ok, {_, _, body}} = :httpc.request(String.to_char_list(
-      "http://api.wolframalpha.com/v2/query?appid=#{app_id()}&input=#{input}&format=image,plaintext"
-    ))
     img_url =
-    body
-    |> xpath(~x"/queryresult/pod[contains(@title, 'Result') or
-                contains(@title, 'Results') or
-                contains(@title, 'Plot')]
-            /subpod/img/@src")
-    |> to_string()
+      case Docs.InfoSys.compute_img(params["expr"]) do
+        [%{img_url: img_url} | _] -> img_url
+        _ -> ""
+      end
     broadcast! socket, "insert_img", %{
       start: params["start"],
       end: params["end"],

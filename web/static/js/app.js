@@ -63,6 +63,8 @@ let App = {
     })
 
     docChan.on("insert_img", ({url, start, end}) => {
+      console.log(start, url)
+      if(url === "") { return }
       editor.deleteText(start, end)
       editor.insertEmbed(start, 'image', url)
     })
