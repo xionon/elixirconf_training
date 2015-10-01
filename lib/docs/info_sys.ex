@@ -1,6 +1,9 @@
 defmodule Docs.InfoSys do
 
-  @backends [Docs.InfoSys.Wolfram]
+  @backends [
+    Docs.InfoSys.Wolfram,
+    Docs.InfoSys.Cats
+  ]
 
   def start_link(backend, opts) do
     backend.start_link(opts)
