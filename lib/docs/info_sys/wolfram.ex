@@ -11,27 +11,31 @@ defmodule Docs.InfoSys.Wolfram do
   end
 
   def handle_info(:request, opts) do
-    import SweetXml
+    if String.contains?(opts[:expr], "cat") do
+      {:noresult, self}
+    else
+      import SweetXml
 
-    input = URI.encode(opts[:expr])
-    {:ok, {_, _, body}} = :httpc.request(String.to_char_list(
-      "http://api.wolframalpha.com/v2/query?appid=#{app_id()}&input=#{input}&format=image,plaintext"
-    ))
+      input = URI.encode(opts[:expr])
+      {:ok, {_, _, body}} = :httpc.request(String.to_char_list(
+        "http://api.wolframalpha.com/v2/query?appid=#{app_id()}&input=#{input}&format=image,plaintext"
+      ))
 
-    img_url =
-      body
-      |> xpath(~x"/queryresult/pod[contains(@title, 'Result') or
-                                contains(@title, 'Results') or
-                                contains(@title, 'Plot')]
-                          /subpod/img/@src")
-      |> to_string()
+      img_url =
+        body
+        |> xpath(~x"/queryresult/pod[contains(@title, 'Result') or
+                                  contains(@title, 'Results') or
+                                  contains(@title, 'Plot')]
+                            /subpod/img/@src")
+        |> to_string()
 
-    case img_url do
-      "" ->
-        send(opts[:client_pid], {:noresult, self})
-      img_url ->
-        send(opts[:client_pid], {:result, self, %{
-                                    score: 90, img_url: img_url}})
+      case img_url do
+        "" ->
+          send(opts[:client_pid], {:noresult, self})
+        img_url ->
+          send(opts[:client_pid], {:result, self, %{
+                                      score: 90, img_url: img_url}})
+      end
     end
 
     {:stop, :shutdown, opts}

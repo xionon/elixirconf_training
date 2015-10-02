@@ -12,10 +12,7 @@ defmodule Docs.InfoSys do
   def compute_img(expr) do
     @backends
     |> Enum.map(fn backend ->
-      Supervisor.start_child(Docs.InfoSys.Supervisor, [backend, [
-          client_pid: self,
-          expr: expr
-      ]])
+      Task.Supervisor.async(Docs.TaskSupervisor, backend, :compute_img, client_pid: self, expr: expr)
     end)
     |> Enum.map(fn
       {:ok, pid} -> {Process.monitor(pid), pid}
